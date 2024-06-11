@@ -1,0 +1,37 @@
+services:
+  temporal-dev-server:
+    container_name: temporal-dev-server
+    image: debian:buster
+    command: >
+      bash -c '\
+        apt update && \
+        apt install -y curl && \
+        curl -sSf https://temporal.download/cli.sh | sh && \
+        PATH="\$PATH:/root/.temporalio/bin" >> ~/.bashrc && \
+        source ~/.bashrc && \
+        temporal server start-dev --namespace default --ip 0.0.0.0
+      '
+    ports:
+      - 7233:7233
+      - 8233:8233
+    healthcheck:
+      test: ["CMD-SHELL", "curl --fail http://localhost:8233/ || exit 1"]
+      interval: 10s
+      timeout: 30s
+      retries: 3
+
+  worker:
+    container_name: temporal-worker
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    depends_on:
+      temporal-dev-server:
+        condition: service_healthy
+    restart: always
+    environment:
+      - TEMPORAL_PORT=temporal-dev-server:7233
+      - TEMPORAL_NAMESPACE=default
+      - TEMPORAL_QUEUE=hello-world
+    volumes:
+      - ./:/app
