@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+
+# Start spring boot devtools process in the background for live-reload.
+(./gradlew build --continuous --quiet) &
+
+# Start the app.
+./gradlew :kotlin:$1:bootRun -PskipDownload=true

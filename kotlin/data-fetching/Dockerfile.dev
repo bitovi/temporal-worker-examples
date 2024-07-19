@@ -1,0 +1,25 @@
+# Use the official Gradle image to build the application
+FROM gradle:8.9.0-jdk21 as build
+
+# Set the working directory inside the build stage
+WORKDIR /app
+
+# ENV SPRING_PROFILES_ACTIVE=dev
+
+# Copy the Gradle wrapper and configuration files
+COPY build.gradle.kts settings.gradle.kts /app/
+
+# Copy the Gradle wrapper files
+COPY gradlew /app/gradlew
+COPY gradle /app/gradle
+
+COPY scripts/start-kotlin-dev /app/scripts/start-kotlin-dev
+
+# Copy the source code
+COPY kotlin/data-fetching /app/kotlin/data-fetching
+
+# Build the application
+RUN ./gradlew build -x test --no-daemon
+
+# Specify the command to run the application
+CMD ["./scripts/start-kotlin-dev", "data-fetching"]

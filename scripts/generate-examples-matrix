@@ -1,0 +1,23 @@
+#!/usr/bin/env bash
+
+languages=("golang" "kotlin")
+
+results=()
+
+for language in "${languages[@]}"; do
+  for project in $(ls "$language"); do
+    results+=("{\"language\":\"$language\",\"project\":\"$project\"}")
+  done
+done
+
+json_results="["
+for i in "${!results[@]}"; do
+  if [ "$i" -eq 0 ]; then
+    json_results+="${results[$i]}"
+  else
+    json_results+=",${results[$i]}"
+  fi
+done
+json_results+="]"
+
+echo "$json_results" | jq '.'

@@ -12,7 +12,7 @@ jobs:
   get-projects:
     runs-on: ubuntu-latest
     outputs:
-      projects: ${{ steps.list-projects.outputs.projects }}
+      projectsMatrix: ${{ steps.list-projects.outputs.projectsMatrix }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
@@ -21,19 +21,18 @@ jobs:
         id: list-projects
         run: |
           set -eux
-          PROJECTS_JSON=$(find ./golang -maxdepth 1 -mindepth 1 -type d | sed 's|^\./||' | jq -c -R . | jq -s -c .)
-          echo "projects=$PROJECTS_JSON" >> $GITHUB_OUTPUT
+          PROJECTS_JSON=$(./scripts/generate-examples-matrix)
+          echo "projectsMatrix=$PROJECTS_JSON" >> $GITHUB_OUTPUT
 
       - name: Display JSON output
-        run: 'echo "Projects: ${{ steps.list-projects.outputs.projects }}"'
+        run: 'echo "Projects: ${{ steps.list-projects.outputs.projectsMatrix }}"'
 
   run-jobs:
     needs:
       - get-projects
     strategy:
-      matrix:
-        project: ${{ fromJson(needs.get-projects.outputs.projects) }}
-    uses: ./.github/workflows/golang.yaml
+      matrix: ${{ fromJson(needs.get-projects.outputs.projectsMatrix) }}
+    uses: ./.github/workflows/${{ matrix.language }}.yaml
     with:
       project: ${{ matrix.project }}
     secrets: inherit

@@ -19,21 +19,24 @@ services:
       interval: 10s
       timeout: 30s
       retries: 3
-
   worker:
-    container_name: temporal-hello-world-golang
+    container_name: temporal-hello-world-java
     build:
-      context: .
-      dockerfile: Dockerfile.dev
+      context: ../../
+      dockerfile: kotlin/hello-world/Dockerfile.dev
     depends_on:
       temporal-dev-server:
         condition: service_healthy
     restart: always
     environment:
+      # Enable live reload
+      - SPRING_PROFILES_ACTIVE=dev
       - TEMPORAL_ADDRESS=temporal-dev-server:7233
       - TEMPORAL_NAMESPACE=default
-      - TEMPORAL_QUEUE=hello-world-golang
-      # - TEMPORAL_CERT=./certs/client.crt
-      # - TEMPORAL_KEY=./certs/client.key
+      - TEMPORAL_QUEUE=hello-world-kotlin
+      # - TEMPORAL_CERT=/app/certs/client.crt
+      # - TEMPORAL_KEY=/app/certs/client.key
     volumes:
-      - ./:/app
+      - ../../certs:/app/certs
+      - ../../kotlin/hello-world:/app/kotlin/hello-world
+      - /app/kotlin/hello-world/build
