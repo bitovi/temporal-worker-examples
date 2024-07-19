@@ -15,21 +15,25 @@ object WorkerApp {
     @JvmStatic
     fun main() {
         val serverAddress = System.getenv("TEMPORAL_ADDRESS")
-        val clientCertPath = Paths.get(System.getenv("TEMPORAL_CERT"))
-        val clientKeyPath = Paths.get(System.getenv("TEMPORAL_KEY"))
+        val clientCertPath = System.getenv("TEMPORAL_CERT")
+        val clientKeyPath = System.getenv("TEMPORAL_KEY")
         val namespace = System.getenv("TEMPORAL_NAMESPACE")
         val queue = System.getenv("TEMPORAL_QUEUE")
 
-        // Create SSL context with mTLS certificates
-        val sslContext = GrpcSslContexts.forClient()
-            .keyManager(clientCertPath.toFile(), clientKeyPath.toFile())
-            .build()
+        val serviceOptionsBuilder = WorkflowServiceStubsOptions.newBuilder().setTarget(serverAddress)
 
-        // Build the service stubs options with mTLS
-        val serviceOptions = WorkflowServiceStubsOptions.newBuilder()
-            .setTarget(serverAddress)
-            .setSslContext(sslContext)
-            .build()
+        if (clientCertPath != null && clientKeyPath != null) {
+            // Create SSL context with mTLS certificates
+            val sslContext = GrpcSslContexts.forClient()
+                .keyManager(Paths.get(clientCertPath).toFile(), Paths.get(clientKeyPath).toFile())
+                .build()
+
+            // Configure mTLS
+            serviceOptionsBuilder.setSslContext(sslContext)
+        }
+
+        // Build the service stubs options
+        val serviceOptions = serviceOptionsBuilder.build()
 
         // Create a Temporal service client
         val service = WorkflowServiceStubs.newServiceStubs(serviceOptions)

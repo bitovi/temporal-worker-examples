@@ -1,32 +1,23 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
-folders=("golang" "kotlin")
-json="{}"
+languages=("golang" "kotlin")
 
-array_to_json_array() {
-    local arr=("$@")
-    local json_array="["
+results=()
 
-    for folder in "${arr[@]}"; do
-        json_array+="\"$folder\","
-    done
-
-    json_array="${json_array%,}]"
-
-    echo "$json_array"
-}
-
-for folder in "${folders[@]}"; do
-    if [ -d "$folder" ]; then
-        subfolders=($(ls -d "$folder"/*/ 2>/dev/null))
-
-        for i in "${!subfolders[@]}"; do
-            subfolders[$i]=$(basename "${subfolders[$i]}")
-        done
-
-        subfolder_json=$(array_to_json_array "${subfolders[@]}")
-        json=$(jq --arg key "$folder" --argjson value "$subfolder_json" '.[$key] = $value' <<<"$json")
-    fi
+for language in "${languages[@]}"; do
+  for project in $(ls "$language"); do
+    results+=("{\"language\":\"$language\",\"project\":\"$project\"}")
+  done
 done
 
-echo "$json"
+json_results="["
+for i in "${!results[@]}"; do
+  if [ "$i" -eq 0 ]; then
+    json_results+="${results[$i]}"
+  else
+    json_results+=",${results[$i]}"
+  fi
+done
+json_results+="]"
+
+echo "$json_results" | jq '.'

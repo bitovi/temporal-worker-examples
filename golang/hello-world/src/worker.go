@@ -5,6 +5,8 @@ import (
 	"crypto/tls"
 	"log"
 	"os"
+	"reflect"
+	"strconv"
 	"time"
 
 	"go.temporal.io/sdk/activity"
@@ -14,10 +16,10 @@ import (
 )
 
 func CreateTemporalClient() (client.Client, error) {
-	port := os.Getenv("TEMPORAL_PORT")
+	port := os.Getenv("TEMPORAL_ADDRESS")
 	namespace := os.Getenv("TEMPORAL_NAMESPACE")
-	certPath := os.Getenv("TEMPORAL_CERT_PATH")
-	keyPath := os.Getenv("TEMPORAL_KEY_PATH")
+	certPath := os.Getenv("TEMPORAL_CERT")
+	keyPath := os.Getenv("TEMPORAL_KEY")
 
 	var connectionOptions client.ConnectionOptions
 
@@ -61,7 +63,7 @@ func Activity(ctx context.Context, workflowId string) (string, error) {
 
 func Workflow(ctx workflow.Context) (string, error) {
 	activityContext := workflow.WithActivityOptions(ctx, workflow.ActivityOptions{
-		StartToCloseTimeout: 60 * time.Minute,
+		StartToCloseTimeout: 10 * time.Minute,
 	})
 	workflowId := workflow.GetInfo(ctx).WorkflowExecution.ID
 	logger := workflow.GetLogger(ctx)
@@ -77,8 +79,28 @@ func Workflow(ctx workflow.Context) (string, error) {
 	return result, nil
 }
 
+func getEnvVar[T any](name string, fallback T) T {
+	rawValue := os.Getenv(name)
+	var value T
+
+	if rawValue == "" {
+		return fallback
+	}
+
+	if reflect.TypeOf(fallback).Kind() == reflect.Int {
+		intValue, err := strconv.Atoi(rawValue)
+		if err != nil {
+			log.Fatalf("Unable to parse $%s=%s as integer: %v", name, rawValue, err)
+		}
+		value = any(intValue).(T)
+	}
+	return value
+}
+
 func main() {
 	taskQueueName := os.Getenv("TEMPORAL_QUEUE")
+	maxConcurrentActivities := getEnvVar("TEMPORAL_MAX_CONCURRENT_ACTIVITIES", 0)
+	maxConcurrentWorkflows := getEnvVar("TEMPORAL_MAX_CONCURRENT_WORKFLOWS", 0)
 	temporalClient, err := CreateTemporalClient()
 
 	if err != nil {
@@ -90,9 +112,14 @@ func main() {
 		OnFatalError: func(err error) {
 			log.Println("Worker crashed:", err)
 		},
-		MaxConcurrentActivityExecutionSize:     1,
-		MaxConcurrentWorkflowTaskExecutionSize: 2,
 	}
+	if maxConcurrentActivities != 0 {
+		workerOptions.MaxConcurrentActivityExecutionSize = maxConcurrentActivities
+	}
+	if maxConcurrentWorkflows != 0 {
+		workerOptions.MaxConcurrentWorkflowTaskExecutionSize = maxConcurrentWorkflows
+	}
+
 	workerInstance := worker.New(temporalClient, taskQueueName, workerOptions)
 	workerInstance.RegisterWorkflow(Workflow)
 	workerInstance.RegisterActivity(Activity)

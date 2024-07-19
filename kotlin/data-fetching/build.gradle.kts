@@ -39,6 +39,7 @@ dependencies {
 	testImplementation("org.jetbrains.kotlin:kotlin-test-junit5")
 	testImplementation("io.temporal:temporal-testing:1.13.0")
 	testImplementation(kotlin("test"))
+	developmentOnly("org.springframework.boot:spring-boot-devtools")
 }
 
 kotlin {

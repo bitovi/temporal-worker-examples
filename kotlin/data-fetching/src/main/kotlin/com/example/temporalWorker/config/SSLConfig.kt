@@ -4,19 +4,19 @@ import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import io.grpc.netty.shaded.io.grpc.netty.GrpcSslContexts
 import io.grpc.netty.shaded.io.netty.handler.ssl.SslContext
-import javax.net.ssl.KeyManagerFactory
-import javax.net.ssl.TrustManagerFactory
-import java.io.FileInputStream
-import java.security.KeyStore
 import java.nio.file.Paths
 
 @Configuration
 class SSLConfig() {
 
     @Bean
-    fun sslContext(): SslContext {
-        val clientCertPath = Paths.get(System.getenv("TEMPORAL_CERT"))
-        val clientKeyPath = Paths.get(System.getenv("TEMPORAL_KEY"))
+    fun sslContext(): SslContext? {
+        val clientCertPath = System.getenv("TEMPORAL_CERT")?.let { Paths.get(it) }
+        val clientKeyPath = System.getenv("TEMPORAL_KEY")?.let { Paths.get(it) }
+
+        if (clientCertPath == null || clientKeyPath == null) {
+            return null
+        }
 
         return GrpcSslContexts.forClient()
             .keyManager(clientCertPath.toFile(), clientKeyPath.toFile())

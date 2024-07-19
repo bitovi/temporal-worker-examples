@@ -11,13 +11,11 @@ import io.temporal.client.WorkflowClientOptions
 import org.springframework.boot.CommandLineRunner
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
-import io.grpc.netty.shaded.io.grpc.netty.GrpcSslContexts
 import io.grpc.netty.shaded.io.netty.handler.ssl.SslContext
-import io.grpc.netty.shaded.io.grpc.netty.NettyChannelBuilder
 
 @Configuration
 class WorkerConfig(
-    private val sslContext: SslContext,
+    private val sslContext: SslContext?,
     private val myActivityImpl: ActivitiesImpl
 ) {
 
@@ -25,10 +23,14 @@ class WorkerConfig(
     fun workflowServiceStubs(): WorkflowServiceStubs {
         val serverAddress = System.getenv("TEMPORAL_ADDRESS")
 
-        val serviceOptions = WorkflowServiceStubsOptions.newBuilder()
+        val serviceOptionsBuilder = WorkflowServiceStubsOptions.newBuilder()
             .setTarget(serverAddress)
-            .setSslContext(sslContext)
-            .build()
+
+        sslContext?.let {
+            serviceOptionsBuilder.setSslContext(it)
+        }
+
+        val serviceOptions = serviceOptionsBuilder.build()
 
         return WorkflowServiceStubs.newServiceStubs(serviceOptions)
     }
