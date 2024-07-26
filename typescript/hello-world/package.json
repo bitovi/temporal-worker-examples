@@ -1,0 +1,36 @@
+{
+  "name": "hello-world",
+  "version": "0.1.0",
+  "description": "A hello world Temporal Worker example in TypeScript",
+  "main": "index.js",
+  "scripts": {
+    "build": "tsc",
+    "start": "ts-node src/worker.ts",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/bitovi/temporal-worker-examples.git"
+  },
+  "keywords": [
+    "Temporal",
+    "worker",
+    "example",
+    "typescript"
+  ],
+  "author": "Austin Kurpuis <austin@bitovi.com> (https://bitovi.com/)",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/bitovi/temporal-worker-examples/issues"
+  },
+  "homepage": "https://github.com/bitovi/temporal-worker-examples#readme",
+  "dependencies": {
+    "@temporalio/client": "^1.10.3",
+    "@temporalio/worker": "^1.10.3"
+  },
+  "devDependencies": {
+    "@types/node": "^20.14.12",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.5.4"
+  }
+}
