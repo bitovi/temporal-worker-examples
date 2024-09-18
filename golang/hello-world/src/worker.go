@@ -5,6 +5,7 @@ import (
 	"crypto/tls"
 	"log"
 	"os"
+	"strconv"
 	"time"
 
 	"go.temporal.io/sdk/activity"
@@ -52,7 +53,7 @@ func Activity(ctx context.Context, workflowId string) (string, error) {
 	logger := activity.GetLogger(ctx)
 	logger.Info("Running Activity for", workflowId)
 
-	time.Sleep(time.Second * 30)
+	time.Sleep(time.Second * 10)
 
 	logger.Info("Ran Activity for", workflowId)
 
@@ -61,7 +62,7 @@ func Activity(ctx context.Context, workflowId string) (string, error) {
 
 func Workflow(ctx workflow.Context) (string, error) {
 	activityContext := workflow.WithActivityOptions(ctx, workflow.ActivityOptions{
-		StartToCloseTimeout: 60 * time.Minute,
+		StartToCloseTimeout: 12 * time.Second,
 	})
 	workflowId := workflow.GetInfo(ctx).WorkflowExecution.ID
 	logger := workflow.GetLogger(ctx)
@@ -79,6 +80,8 @@ func Workflow(ctx workflow.Context) (string, error) {
 
 func main() {
 	taskQueueName := os.Getenv("TEMPORAL_QUEUE")
+	activityConcurrency := GetEnvInt("TEMPORAL_ACTIVITY_CONCURRENCY", 1)
+	workerConcurrency := GetEnvInt("TEMPORAL_WORKFLOW_CONCURRENCY", 2)
 	temporalClient, err := CreateTemporalClient()
 
 	if err != nil {
@@ -90,8 +93,8 @@ func main() {
 		OnFatalError: func(err error) {
 			log.Println("Worker crashed:", err)
 		},
-		MaxConcurrentActivityExecutionSize:     1,
-		MaxConcurrentWorkflowTaskExecutionSize: 2,
+		MaxConcurrentActivityExecutionSize:     activityConcurrency,
+		MaxConcurrentWorkflowTaskExecutionSize: workerConcurrency,
 	}
 	workerInstance := worker.New(temporalClient, taskQueueName, workerOptions)
 	workerInstance.RegisterWorkflow(Workflow)
@@ -101,4 +104,18 @@ func main() {
 	if err != nil {
 		log.Fatalln("unable to start Worker", err)
 	}
+}
+
+func GetEnvInt(varName string, defaultValue int) int {
+	valueStr := os.Getenv(varName)
+	if valueStr == "" {
+		return defaultValue
+	}
+
+	value, err := strconv.Atoi(valueStr)
+	if err != nil {
+		return defaultValue
+	}
+
+	return value
 }
