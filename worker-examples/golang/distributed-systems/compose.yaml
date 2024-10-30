@@ -1,0 +1,54 @@
+name: distributed-systems
+
+services:
+  temporal-dev-server: 
+    extends: 
+      file: ../../../temporal-architecture/common.yaml
+      service: temporal-dev-server
+    ports:
+      - 7235:7233
+      - 8235:8233
+  transmission-endpoint:
+    build:
+      context: .
+      dockerfile: Dockerfile.transmissionEndpoint
+    ports:
+      - 3001:3000
+  db: 
+    image: postgres:16-alpine
+    ports:
+      - 5435:5432
+    environment:
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_USER: postgres
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./initdb:/docker-entrypoint-initdb.d/
+  worker:
+    build:
+      context: .
+      dockerfile: Dockerfile.worker
+    depends_on:
+      - temporal-dev-server
+      - server
+    restart: always
+    environment:
+      TEMPORAL_HOST_PORT: temporal-dev-server:7233
+      TRANSMIT_URL: http://transmission-endpoint:3000
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_USER: postgres
+      DB_PASS: postgres
+  server:
+    build:
+      context: .
+      dockerfile: Dockerfile.server
+    depends_on:
+      - temporal-dev-server
+    restart: always
+    environment:
+      - TEMPORAL_HOST_PORT=temporal-dev-server:7233
+    ports:
+      - 3000:3000
+volumes:
+  postgres_data:

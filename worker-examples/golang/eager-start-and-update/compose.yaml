@@ -1,0 +1,37 @@
+name: eager-start-and-update
+
+services:
+
+  temporal-dev-server: 
+    extends: 
+      file: ../../../temporal-architecture/common.yaml
+      service: temporal-dev-server
+    ports:
+      - 7236:7233
+      - 8236:8233
+
+  worker:
+    build: .
+    ports:
+      - 8080:8080
+
+    # INCLUDE this depends_on if you are targeting docker-compose hosted
+    #    temporal server rather than temporal cloud server
+    depends_on:
+      temporal-dev-server:
+        condition: service_healthy
+    restart: always
+    environment:
+      HTTP_PORT: 8080
+
+      # Use this configuration with the docker-compose hosted temporal server
+      TEMPORAL_HOST_PORT: temporal-dev-server:7233
+
+      # Use this configuration with temporal cloud if wanted
+      # - TEMPORAL_HOST_PORT=bitovi.x72yu.tmprl.cloud:7233
+      # - TEMPORAL_NAMESPACE=bitovi.x72yu
+      # - TEMPORAL_CERTIFICATE_PATH=./certs/bitovi.crt
+      # - TEMPORAL_KEY_PATH=./certs/bitovi.key
+
+    volumes:
+      - ./certs/:/app/certs

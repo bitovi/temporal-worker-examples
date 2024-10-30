@@ -1,0 +1,22 @@
+
+services:
+  prometheus:
+    image: prom/prometheus:v2.37.0
+    volumes:
+      - ./temporal-cloud/metrics/prometheus-config.yml:/etc/prometheus/prometheus.yml
+
+  grafana:
+    image: grafana/grafana:7.5.16
+    environment:
+      - GF_INSTALL_PLUGINS=grafana-clock-panel
+      - GOOGLE_OAUTH_DOMAIN=$GOOGLE_OAUTH_DOMAIN
+      - GOOGLE_OAUTH_CLIENT_ID=$GOOGLE_OAUTH_CLIENT_ID
+      - GOOGLE_OAUTH_CLIENT_SECRET=$GOOGLE_OAUTH_CLIENT_SECRET
+      - GF_PANELS_DISABLE_SANITIZE_HTML=true
+    ports:
+      - 443:3000
+    volumes:
+      - ./temporal-cloud/metrics/grafana/provisioning/datasources:/etc/grafana/provisioning/datasources
+      - ./temporal-cloud/metrics/grafana/grafana.ini:/etc/grafana/grafana.ini
+    depends_on:
+      - prometheus

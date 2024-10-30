@@ -1,0 +1,11 @@
+{
+  "name": "distributed-systems-examples",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/bitovi/distributed-systems-examples.git"
+  },
+  "dependencies": {
+    "fastify": "^4.25.2",
+    "fastify-graceful-shutdown": "^3.5.1"
+  }
+}

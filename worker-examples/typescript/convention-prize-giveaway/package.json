@@ -1,0 +1,60 @@
+{
+  "name": "temporal_giveaway_api",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "build": "npm run clean && tsc --build && npm run copyfiles",
+    "build.watch": "tsc --build --watch",
+    "clean": "rimraf lib",
+    "copyfiles": "copyfiles -u 1 \"src/email-templates/**/*\" lib/",
+    "dev": "nodemon src/index.ts",
+    "local:server": "nodemon src/server.ts",
+    "dev:docker": "./dev.sh",
+    "dev:docker:stop": "./dev-stop.sh",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "start": "ts-node src/worker.ts",
+    "start:watch": "nodemon src/worker.ts",
+    "workflow": "ts-node scripts/run-workflow.ts"
+  },
+  "nodemonConfig": {
+    "execMap": {
+      "ts": "ts-node"
+    },
+    "ext": "ts",
+    "watch": [
+      "src"
+    ]
+  },
+  "dependencies": {
+    "@fastify/cors": "^8.3.0",
+    "@sendgrid/mail": "^7.7.0",
+    "@temporalio/activity": "1.7.0",
+    "@temporalio/client": "1.7.0",
+    "@temporalio/worker": "1.7.0",
+    "@temporalio/workflow": "1.7.0",
+    "bcryptjs": "^2.4.3",
+    "dotenv": "^16.3.1",
+    "fastify": "^4.20.0",
+    "jsonwebtoken": "^9.0.1",
+    "prom-client": "^14.2.0",
+    "twilio": "^4.15.0"
+  },
+  "devDependencies": {
+    "@bitovi/eslint-config": "^1.6.0",
+    "@tsconfig/node16": "^1.0.0",
+    "@types/node": "^16.11.43",
+    "@typescript-eslint/eslint-plugin": "^5.0.0",
+    "@typescript-eslint/parser": "^5.0.0",
+    "copyfiles": "^2.4.1",
+    "eslint": "^8.46.0",
+    "eslint-config-prettier": "^8.3.0",
+    "eslint-plugin-deprecation": "^1.2.1",
+    "eslint-plugin-prettier": "^5.0.0",
+    "nodemon": "^2.0.12",
+    "prettier": "^3.0.1",
+    "rimraf": "^5.0.1",
+    "ts-node": "^10.8.1",
+    "typescript": "^4.4.2"
+  }
+}

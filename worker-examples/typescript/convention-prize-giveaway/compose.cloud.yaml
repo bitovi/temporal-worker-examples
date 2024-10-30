@@ -1,0 +1,26 @@
+name: convention-prize-giveaway
+
+services:
+  replay-giveaway:
+    env_file: .env
+    build:
+      context: .
+    restart: always
+    ports:
+      - 8080:8000
+    volumes:
+      - ./src:/usr/src/app/src
+    command: >
+      npm run dev
+    environment:
+      - PORT=8000
+
+  prometheus:
+    extends: 
+      file: ../../../temporal-architecture/common.cloud.yaml
+      service: prometheus
+
+  grafana:
+    extends: 
+      file: ../../../temporal-architecture/common.cloud.yaml
+      service: grafana
