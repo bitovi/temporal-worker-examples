@@ -1,0 +1,53 @@
+name: bpmn-tool
+
+services:
+  temporal-dev-server:
+    container_name: temporal-server
+    extends: 
+      file: ../../../temporal-architecture/common.yaml
+      service: temporal-dev-server
+    ports:
+      - 7234:7233
+      - 8234:8233
+    
+  worker:
+    container_name: temporal-worker
+    build:
+      context: backend
+      dockerfile: Dockerfile
+    depends_on:
+      - temporal-dev-server
+    restart: always
+    environment:
+      - TEMPORAL_ADDRESS=temporal-dev-server:7233
+    volumes:
+      - ./backend/bpmn-examples:/usr/src/app/bpmn-examples
+
+  api:
+    container_name: application-api
+    build:
+      context: backend
+      dockerfile: Dockerfile
+    depends_on:
+      - worker
+    restart: always
+    environment:
+      - HTTP_PORT=8000
+    ports:
+      - 8000:8000
+    command: npm run api
+    volumes:
+      - ./backend/bpmn-examples:/usr/src/app/bpmn-examples
+
+  ui:
+    container_name: ui
+    build:
+      context: ui
+      dockerfile: Dockerfile
+    depends_on:
+      - api
+    restart: always
+    ports:
+      - 8080:8080
+    volumes:
+      - ./ui/src/:/usr/src/app/src

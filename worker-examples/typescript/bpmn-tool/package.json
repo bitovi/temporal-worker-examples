@@ -1,0 +1,19 @@
+{
+  "name": "temporal-bpmn-tool",
+  "version": "1.0.0",
+  "description": "BPMN for Temporal workflows",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "workflow": "cd backend && npm run workflow"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/bitovi/temporal-bpmn-tool.git"
+  },
+  "author": "Bitovi LLC",
+  "license": "UNLICENSED",
+  "bugs": {
+    "url": "https://github.com/bitovi/temporal-bpmn-tool/issues"
+  },
+  "homepage": "https://github.com/bitovi/temporal-bpmn-tool#readme"
+}

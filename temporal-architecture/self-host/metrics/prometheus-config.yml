@@ -1,0 +1,24 @@
+global:
+ scrape_interval: 10s
+scrape_configs:
+ - job_name: 'temporalmetrics'
+   metrics_path: /metrics
+   scheme: http
+   static_configs:
+     # cluster metrics
+     - targets:
+         - 'temporal:8001'
+       labels:
+         group: 'server-metrics'
+
+     # sdk metrics
+     - targets:
+         - 'replay-giveaway:8077'
+       labels:
+         group: 'sdk-metrics'
+
+     # replay-giveaway custom metrics
+     - targets:
+         - 'replay-giveaway:8080'
+       labels:
+         group: 'workflow-metrics'

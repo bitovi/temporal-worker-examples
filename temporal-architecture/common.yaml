@@ -1,0 +1,51 @@
+
+services:
+  temporal-dev-server:
+    image: debian:buster
+    command: >
+      bash -c '\
+        apt update && \
+        apt install -y curl && \
+        curl -sSf https://temporal.download/cli.sh | sh && \
+        PATH="\$PATH:/root/.temporalio/bin" >> ~/.bashrc && \
+        source ~/.bashrc && \
+        temporal server start-dev --namespace default --ip 0.0.0.0
+      '
+    # ports: 7233 and 8233 need to be remapped for each extension of this base
+    healthcheck:
+      test: ["CMD-SHELL", "curl --fail http://localhost:8233/ || exit 1"]
+      interval: 10s
+      timeout: 30s
+      retries: 3
+
+  postgres:
+    image: postgres:latest
+    ports:
+      - 5432:5432
+    environment:
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_USER: postgres
+  
+  prometheus:
+    image: prom/prometheus:v2.37.0
+    volumes:
+      - ./self-host//metrics/prometheus-config.yml:/etc/prometheus/prometheus.yml
+
+  grafana:
+    image: grafana/grafana:7.5.16
+    environment:
+      - GOOGLE_OAUTH_DOMAIN=$GOOGLE_OAUTH_DOMAIN
+      - GOOGLE_OAUTH_CLIENT_ID=$GOOGLE_OAUTH_CLIENT_ID
+      - GOOGLE_OAUTH_CLIENT_SECRET=$GOOGLE_OAUTH_CLIENT_SECRET
+      - GF_PANELS_DISABLE_SANITIZE_HTML=true
+      - GF_AUTH_DISABLE_LOGIN_FORM=true
+      - GF_AUTH_ANONYMOUS_ENABLED=true
+      - GF_AUTH_ANONYMOUS_ORG_ROLE=Admin
+      - GF_INSTALL_PLUGINS=grafana-clock-panel
+    ports:
+      - 8002:3000
+    volumes:
+      - ./self-host/metrics/grafana/provisioning/datasources:/etc/grafana/provisioning/datasources
+      - ./self-host/metrics/grafana/grafana.ini:/etc/grafana/grafana.ini
+    depends_on:
+      - prometheus

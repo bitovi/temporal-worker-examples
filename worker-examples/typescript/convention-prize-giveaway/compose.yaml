@@ -1,0 +1,50 @@
+name: convention-prize-giveaway
+
+services:
+  replay-giveaway:
+    build:
+      context: .
+    depends_on:
+      temporal-dev-server:
+        condition: service_healthy
+    restart: always
+    environment:
+      - PORT=8000
+      - TEMPORAL_HOST_URL=temporal-dev-server:7233
+    volumes:
+      - ./src:/usr/src/app/src
+    command: >
+      npm run dev
+
+  temporal-dev-server:
+    extends: 
+      file: ../../../temporal-architecture/common.yaml
+      service: temporal-dev-server
+    ports:
+      - 7238:7233
+      - 8238:8233
+
+  temporal-admin-tools:
+    image: temporalio/admin-tools:latest
+    depends_on:
+      temporal-dev-server:
+        condition: service_healthy
+    environment:
+      - TEMPORAL_CLI_ADDRESS=temporal-dev-server:7233
+    stdin_open: true
+    tty: true
+
+  prometheus:
+    extends: 
+      file: ../../../temporal-architecture/common.yaml
+      service: prometheus
+
+  grafana:
+    extends: 
+      file: ../../../temporal-architecture/common.yaml
+      service: grafana
+  
+  postgres: 
+    extends:
+      file: ../../../temporal-architecture/common.yaml
+      service: postgres

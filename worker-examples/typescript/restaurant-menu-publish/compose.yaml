@@ -1,0 +1,21 @@
+name: restaurant-menu-publish
+
+services:
+  temporal-dev-server:
+    container_name: tps-temporal
+    extends: 
+      file: ../../../temporal-architecture/common.yaml
+      service: temporal-dev-server
+    ports:
+      - 7236:7233
+      - 8236:8233
+
+  worker:
+    container_name: tps-worker
+    build: ./
+    restart: always
+    depends_on:
+      temporal-dev-server:
+        condition: service_healthy
+    environment:
+      - TEMPORAL_ADDRESS=temporal-dev-server:7233
